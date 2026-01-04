@@ -63,7 +63,20 @@ class ProtocolHandler(object):
         return b''.join(line).decode('utf-8')
     
     def handle_bulk_string(self, socket_file):
-        print("Bulk String")
+        # Read the length of the string to read
+        length = int(self._read_line(socket_file))
+        if length == -1:
+            return None
+        
+        # Step 3: Read exactly 'length' bytes
+        data = socket_file.read(length)
+
+        # Read the trailing \r\n
+        socket_file.read(2)
+
+        # return the string version by decoding
+        return data.decode('utf-8')
+
 
     def handle_array(self, socket_file):
         print("Array")

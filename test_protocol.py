@@ -69,6 +69,31 @@ class TestProtocolHandler(unittest.TestCase):
         self.assertIsInstance(result, Error)
         self.assertEqual(result.message, "ERR unknown command")
 
+    def test_bulk_string_simple(self):
+        """Test parsing a simple bulk string"""
+        fake_data = BytesIO(b'$6\r\nfoobar\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertEqual(result, 'foobar')
+        self.assertIsInstance(result, str)
+
+    def test_bulk_string_empty(self):
+        """Test parsing an empty bulk string"""
+        fake_data = BytesIO(b'$0\r\n\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertEqual(result, '')
+
+    def test_bulk_string_null(self):
+        """Test parsing a null bulk string"""
+        fake_data = BytesIO(b'$-1\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertIsNone(result)
+
+    def test_bulk_string_with_newline(self):
+        """Test parsing bulk string containing newlines"""
+        fake_data = BytesIO(b'$12\r\nHello\r\nWorld\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertEqual(result, 'Hello\r\nWorld')
+
 
 if __name__ == '__main__':
     # Run the tests with verbose output
