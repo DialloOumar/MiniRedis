@@ -77,7 +77,6 @@ class ProtocolHandler(object):
         # return the string version by decoding
         return data.decode('utf-8')
 
-
     def handle_array(self, socket_file):
         # Get the size of the array
         size = int(self._read_line(socket_file))
@@ -93,7 +92,26 @@ class ProtocolHandler(object):
         return arr
 
     def write_response(self,socket_file,data):
-        pass
+
+        resp = ''
+        if isinstance(data, int):
+            resp = ':%s\r\n' % data
+        elif isinstance(data,str):
+            resp = '$%s\r\n%s\r\n' % (len(data),data)
+        elif isinstance(data, list):
+            resp = '*%s\r\n'% len(data)
+            socket_file.write(resp.encode('utf-8'))
+            for elm in data:
+                self.write_response(socket_file,elm)
+            socket_file.flush()
+            return
+        elif isinstance(data,Error):
+            resp = '-%s\r\n' % data.message
+        elif data is None:
+            resp = '$-1\r\n'
+
+        socket_file.write(resp.encode('utf-8'))
+        socket_file.flush()
 
 class Server(object):
     def __init__(self, host="127.0.0.1", port=31337, max_client=64):
