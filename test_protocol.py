@@ -94,6 +94,47 @@ class TestProtocolHandler(unittest.TestCase):
         result = self.handler.handle_request(fake_data)
         self.assertEqual(result, 'Hello\r\nWorld')
 
+    def test_array_empty(self):
+        """Test parsing an empty array"""
+        fake_data = BytesIO(b'*0\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertEqual(result, [])
+        self.assertIsInstance(result, list)
+
+    def test_array_null(self):
+        """Test parsing a null array"""
+        fake_data = BytesIO(b'*-1\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertIsNone(result)
+
+    def test_array_simple(self):
+        """Test parsing array with bulk strings"""
+        # *2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n
+        fake_data = BytesIO(b'*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertEqual(result, ['foo', 'bar'])
+
+    def test_array_get_command(self):
+        """Test parsing GET mykey command"""
+        # GET mykey = *2\r\n$3\r\nGET\r\n$5\r\nmykey\r\n
+        fake_data = BytesIO(b'*2\r\n$3\r\nGET\r\n$5\r\nmykey\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertEqual(result, ['GET', 'mykey'])
+
+    def test_array_mixed_types(self):
+        """Test parsing array with mixed types"""
+        # [1, "hello", 42] = *3\r\n:1\r\n$5\r\nhello\r\n:42\r\n
+        fake_data = BytesIO(b'*3\r\n:1\r\n$5\r\nhello\r\n:42\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertEqual(result, [1, 'hello', 42])
+
+    def test_array_nested(self):
+        """Test parsing nested array"""
+        # [["foo"], "bar"] = *2\r\n*1\r\n$3\r\nfoo\r\n$3\r\nbar\r\n
+        fake_data = BytesIO(b'*2\r\n*1\r\n$3\r\nfoo\r\n$3\r\nbar\r\n')
+        result = self.handler.handle_request(fake_data)
+        self.assertEqual(result, [['foo'], 'bar'])
+
 
 if __name__ == '__main__':
     # Run the tests with verbose output

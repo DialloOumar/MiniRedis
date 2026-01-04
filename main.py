@@ -79,7 +79,18 @@ class ProtocolHandler(object):
 
 
     def handle_array(self, socket_file):
-        print("Array")
+        # Get the size of the array
+        size = int(self._read_line(socket_file))
+        if size == -1: 
+            return None
+        elif size < -1:
+            raise CommandError("Invalid Command")
+        
+        arr = []
+        while size > 0:
+            arr.append(self.handle_request(socket_file))
+            size -= 1
+        return arr
 
     def write_response(self,socket_file,data):
         pass
