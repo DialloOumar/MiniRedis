@@ -1,6 +1,6 @@
 import unittest
 from io import BytesIO
-from main import ProtocolHandler, Disconnect, Error
+from server import ProtocolHandler, Disconnect, Error
 
 
 class TestProtocolHandler(unittest.TestCase):
