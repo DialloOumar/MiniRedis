@@ -131,17 +131,40 @@ class Server(object):
                 data = self._protocol.handle_request(socket_file)
                 break
             except Disconnect:
-                break
-
+                pass
+            
             # try:
-            #     resp = self.get_response(data)
+            #   resp = self.get_response(data)
             # except CommandError as exc:
             #     resp = Error(exc.args[0])
             
             # self._protocol.write_response(socket_file, resp)
     
     def get_response(self,data):
-        pass
+        command = data[0].upper()
+
+        if command == "GET":
+            if len(data) != 2:
+                raise CommandError("ERR Wrong number of arguments for GET")
+            return self._kv.get(data[1])
+        elif command == "SET":
+            if len(data) != 3:
+                raise CommandError("ERR Wrong number of arguments for SET")
+            self._kv[data[1]] = data[2]
+            return "OK"
+        elif command == "DELETE":
+            if len(data) != 2:
+                raise CommandError("ERR Wrong number of arguments for DELETE")
+            if data[1] in self._kv:
+                del self._kv[data[1]]
+                return 1
+            return 0
+        elif command == "PING":
+            if len(data) != 1:
+                raise CommandError("ERR Wrong number of arguments for PING")
+            return "PONG"
+        else:
+            raise CommandError("ERR Unknown command %s" % command)
 
     def run(self):
         self._server.serve_forever()
