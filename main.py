@@ -7,7 +7,6 @@ from io import BytesIO
 from socket import error as socket_error
 
 
-
 class CommandError(Exception): pass
 class Disconnect(Exception): pass
 
@@ -35,7 +34,16 @@ class ProtocolHandler(object):
         return resp
 
     def handle_simple_string(self,socket_file):
-        
+        return str(self._read_line(socket_file))
+
+    def handle_error(self, socket_file):
+        msg = str(self._read_line(socket_file))
+        return Error(msg)
+    
+    def handle_integer(self, socket_file):
+        return int(self._read_line(socket_file))
+    
+    def _read_line(self, socket_file):
         line = []
         ch=b'1'
         while  ch != b'':
@@ -53,12 +61,6 @@ class ProtocolHandler(object):
                 line.append(ch)
         
         return b''.join(line).decode('utf-8')
-
-    def handle_error(self, socket_file):
-        print("Error")
-    
-    def handle_integer(self, socket_file):
-        print("Integer")
     
     def handle_bulk_string(self, socket_file):
         print("Bulk String")
@@ -104,26 +106,3 @@ class Server(object):
 
 if __name__ == "__main__":
     print("Hello miniRedis!")
-    
-    # Test the protocol handler
-    print("\n=== Testing Protocol Handler ===")
-    
-    # Create a fake socket file using BytesIO
-    from io import BytesIO
-    
-    # Test 1: Simple String
-    print("\nTest 1: Simple String")
-    fake_data = BytesIO(b'+OK\r\n')
-    handler = ProtocolHandler()
-    result = handler.handle_request(fake_data)
-    print(f"Input: +OK\\r\\n")
-    print(f"Result: {result}")
-    print(f"Expected: OK")
-    
-    # Test 2: Another Simple String
-    print("\nTest 2: Simple String - Hello")
-    fake_data = BytesIO(b'+Hello World\r\n')
-    result = handler.handle_request(fake_data)
-    print(f"Input: +Hello World\\r\\n")
-    print(f"Result: {result}")
-    print(f"Expected: Hello World")
