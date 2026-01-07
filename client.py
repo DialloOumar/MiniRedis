@@ -25,4 +25,13 @@ class Client(object):
             self._socket.close()
     
     def execute(self, *args):
-        pass
+        # convert args tuble to list
+        command = list(args)
+
+        # send command to server (encoded as RESP array)
+        self._protocol.write_response(self._socket_file, command)
+
+        # read and decode response from the server
+        resp = self._protocol.handle_request(self._socket_file)
+
+        return resp

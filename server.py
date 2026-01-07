@@ -60,4 +60,6 @@ class Server(object):
         self._server.serve_forever()
 
 if __name__ == "__main__":
-    print("Hello miniRedis!")
+    print("Sarting MiniRedis Server!")
+    server = Server()
+    server.run()
