@@ -16,8 +16,9 @@ class Server(object):
     
     def connection_handler(self,conn, address):
         socket_file = conn.makefile('rwb')
-
+        print("connection established.....")
         while True:
+            print("Waiting..")
             try:
                 data = self._protocol.handle_request(socket_file)
             except Disconnect:
