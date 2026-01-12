@@ -13,6 +13,37 @@ class Server(object):
             spawn=self._pool)
         self._protocol = ProtocolHandler()
         self._kv = {}
+
+        self._command = {
+            "GET":self._get,
+            "SET": self._set,
+            "DELETE":self._delete,
+            "PING": self._ping,
+        }
+    
+    def _get(self,data):
+        if len(data) != 2:
+            raise CommandError("ERR Wrong number of arguments for GET")
+        return self._kv.get(data[1])
+
+    def _set(self,data):
+        if len(data) != 3:
+            raise CommandError("ERR Wrong number of arguments for SET")
+        self._kv[data[1]] = data[2]
+        return "OK"
+    
+    def _delete(self,data):
+        if len(data) != 2:
+            raise CommandError("ERR Wrong number of arguments for DELETE")
+        if data[1] in self._kv:
+            del self._kv[data[1]]
+            return 1
+        return 0
+    
+    def _ping(self, data):
+        if len(data) != 1:
+            raise CommandError("ERR Wrong number of arguments for PING")
+        return "PONG"
     
     def connection_handler(self,conn, address):
         socket_file = conn.makefile('rwb')
@@ -33,29 +64,8 @@ class Server(object):
     
     def get_response(self,data):
         command = data[0].upper()
-
-        if command == "GET":
-            if len(data) != 2:
-                raise CommandError("ERR Wrong number of arguments for GET")
-            return self._kv.get(data[1])
-        elif command == "SET":
-            if len(data) != 3:
-                raise CommandError("ERR Wrong number of arguments for SET")
-            self._kv[data[1]] = data[2]
-            return "OK"
-        elif command == "DELETE":
-            if len(data) != 2:
-                raise CommandError("ERR Wrong number of arguments for DELETE")
-            if data[1] in self._kv:
-                del self._kv[data[1]]
-                return 1
-            return 0
-        elif command == "PING":
-            if len(data) != 1:
-                raise CommandError("ERR Wrong number of arguments for PING")
-            return "PONG"
-        else:
-            raise CommandError("ERR Unknown command %s" % command)
+        return self._command[command](data)
+        # raise CommandError("ERR Unknown command %s" % command)
 
     def run(self):
         self._server.serve_forever()
